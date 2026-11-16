@@ -8,7 +8,7 @@
 *service-account*.json
 
 # Files the notebook writes while running
-acme_cancellations.json
+assets/acme_cancellations.json
 
 # Python
 __pycache__/

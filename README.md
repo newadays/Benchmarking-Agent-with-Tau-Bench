@@ -2,7 +2,7 @@
 
 A customer-support chatbot for a fictional online retailer, **Acme Co.** An OpenAI GPT model answers customers' questions about their orders by querying a real e-commerce database in **Google BigQuery** (`thelook_ecommerce`), and can cancel orders under a written policy. The notebook then **evaluates the agent the way Sierra's [τ-bench](https://sierra.ai/blog/benchmarking-ai-agents) does**: simulated customers, outcome-based scoring and a reliability metric (pass^k).
 
-Everything is in [`agents-tools-db.ipynb`](agents-tools-db.ipynb).
+Everything is in [`src/agents-tools-db.ipynb`](src/agents-tools-db.ipynb).
 
 ---
 
@@ -16,11 +16,11 @@ Everything is in [`agents-tools-db.ipynb`](agents-tools-db.ipynb).
 
 | Piece | In τ-bench | In this notebook |
 | --- | --- | --- |
-| **Domain database** | A realistic store (τ-retail) or airline (τ-airline) database: users, orders, flights, reservations | BigQuery `thelook_ecommerce`, plus a local cancellation sandbox (`acme_cancellations.json`) |
+| **Domain database** | A realistic store (τ-retail) or airline (τ-airline) database: users, orders, flights, reservations | BigQuery `thelook_ecommerce`, plus a local cancellation sandbox (`assets/acme_cancellations.json`) |
 | **Tools** | API functions the agent can call to read or change the database (look up an order, exchange an item, rebook a flight) | `list_datasets`, `list_tables`, `get_table`, `sql_query`, `cancel_order` |
 | **Policy** | A written rulebook the agent must follow ("verify identity first", "basic economy can't be changed") | `ACME_POLICY` |
 | **Simulated user** | An LLM playing the customer, given a hidden scenario with a goal, personal details and how to behave | `simulate_user()` with each task's `instruction` |
-| **Task** | Scenario + the expected end state of the database (+ facts the agent must say) | Entries in `acme_tasks.json` |
+| **Task** | Scenario + the expected end state of the database (+ facts the agent must say) | Entries in `assets/acme_tasks.json` |
 
 ### How one test runs (an "episode")
 
@@ -88,9 +88,9 @@ This notebook follows the original τ-bench design.
 - Only cancel orders with status `Processing`, and confirm with the customer first.
 - Never state details a tool didn't return.
 
-**Sandboxed writes:** `cancel_order` never modifies BigQuery. It checks that the order belongs to the email and is still `Processing`, then records the cancellation in `acme_cancellations.json`. Later queries show sandbox-cancelled orders as `Cancelled`.
+**Sandboxed writes:** `cancel_order` never modifies BigQuery. It checks that the order belongs to the email and is still `Processing`, then records the cancellation in `assets/acme_cancellations.json`. Later queries show sandbox-cancelled orders as `Cancelled`.
 
-**Tasks** (`build_tasks()`) are generated from real customers in your dataset and saved to `acme_tasks.json`, so every run is scored against the same expectations:
+**Tasks** (`build_tasks()`) are generated from real customers in your dataset and saved to `assets/acme_tasks.json`, so every run is scored against the same expectations:
 
 | Task | The simulated customer… | Pass requires |
 | --- | --- | --- |
@@ -143,11 +143,11 @@ Run on 2026-11-16 with `run_benchmark(n_trials=1)`: agent `gpt-5.4`, simulated c
 1. **Get an OpenAI API key** at [platform.openai.com](https://platform.openai.com). The step-by-step guide with screenshots is in the notebook's *Get your API keys* section.
    1. **Settings → API keys → Create new secret key**, then copy it immediately (it's shown only once).
 
-      ![OpenAI API keys page](Open_AI_Keys.png)
+      ![OpenAI API keys page](assets/Open_AI_Keys.png)
 
    2. **Free daily usage:** in **Settings → Data controls → Sharing**, set **Share inputs and outputs with OpenAI** to *Enabled* and click **Save**. Eligible accounts then see *"You're eligible for free daily usage on traffic shared with OpenAI"*. At the time of the screenshot that was up to 250K tokens/day on the larger models and 2.5M tokens/day on the mini/nano models.
 
-      ![OpenAI Data controls - Sharing](Free_Open_API_Keys.png)
+      ![OpenAI Data controls - Sharing](assets/Free_Open_API_Keys.png)
 
       > ⚠️ With sharing on, OpenAI may **train on everything you send through the API**. Use it only with data you're allowed to share. The synthetic `thelook_ecommerce` data is fine; real customer data is not. Usage beyond the free limits, or on other models, is billed normally, so you may still need a payment method under **Settings → Billing**.
 
@@ -199,11 +199,29 @@ This project fits comfortably inside both:
 
 ## Files
 
+```text
+.
+├── src/
+│   └── agents-tools-db.ipynb   # the agent, its tools and the τ-bench-style evaluation
+├── assets/
+│   ├── Agent_AI.png            # overview diagram shown at the top of the notebook
+│   ├── Open_AI_Keys.png        # screenshots for the OpenAI API-key guide
+│   ├── Free_Open_API_Keys.png
+│   ├── acme_tasks.json         # generated benchmark tasks
+│   └── acme_cancellations.json # cancellation sandbox (created at run time, not committed)
+├── .env.example                # template for .env (never commit .env)
+├── LICENSE
+└── README.md
+```
+
 | File | What it is |
 | --- | --- |
-| `agents-tools-db.ipynb` | The agent, its tools and the τ-bench-style evaluation |
-| `acme_tasks.json` | Generated benchmark tasks (rebuild with `build_tasks(force=True)`) |
-| `acme_cancellations.json` | Sandbox of cancellations made by the agent (reset at the start of every episode) |
+| `src/agents-tools-db.ipynb` | The agent, its tools and the τ-bench-style evaluation. Open it from `src/`; it finds `assets/` and the root `.env` on its own |
+| `assets/acme_tasks.json` | Generated benchmark tasks (rebuild with `build_tasks(force=True)`) |
+| `assets/acme_cancellations.json` | Sandbox of cancellations made by the agent (reset at the start of every episode) |
+| `assets/*.png` | Overview diagram and OpenAI API-key screenshots |
 | `.env.example` | Template for `.env` (never commit `.env`) |
-| `Agent_AI.png` | Overview diagram shown at the top of the notebook |
-| `Open_AI_Keys.png`, `Free_Open_API_Keys.png` | Screenshots for the OpenAI API-key guide |
+
+## License
+
+Released under the [MIT License](LICENSE).
