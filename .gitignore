@@ -1,0 +1,25 @@
+# Secrets: Anthropic, OpenAI and Google settings. Commit .env.example instead.
+.env
+.env.*
+!.env.example
+
+# Google Cloud service-account keys, if you ever download one
+*credentials*.json
+*service-account*.json
+
+# Files the notebook writes while running
+acme_cancellations.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
